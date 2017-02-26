@@ -2,8 +2,7 @@ export LOCALVERSION="-vs995.10b.reStock-1.0-kcal"
 export KBUILD_BUILD_USER=BackCheck
 export KBUILD_BUILD_HOST=nowhere
 export ARCH=arm64
-export CROSS_COMPILE=$HOME/aarch64-linux-android-4.9/bin/aarch64-linux-android-
-
+export CROSS_COMPILE=./aarch64-linux-android-4.9/prebuilt/linux-x86_64/bin/aarch64-linux-android-
 DIR=$(pwd)
 BUILD="$DIR/build"
 OUT="$DIR/out"
