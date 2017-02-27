@@ -1134,7 +1134,13 @@ static int fg_set_ram_addr(struct fg_chip *chip, u16 *address)
 }
 
 #ifdef CONFIG_LGE_PM
-#define COMP_FACTOR             15     /* -1.7degree/1A */
+#if defined(CONFIG_MACH_MSM8996_ELSA_KDDI_JP) || defined(CONFIG_MACH_MSM8996_ELSA_DCM_JP)
+#define COMP_FACTOR              6     /* -0.6degree/1A */
+#elif defined(CONFIG_MACH_MSM8996_ELSA)
+#define COMP_FACTOR              9     /* -0.9degree/1A */
+#else
+#define COMP_FACTOR             15     /* -1.5degree/1A */
+#endif
 #define CHG_CURR_SAMPLE_COUNT   3
 
 /*

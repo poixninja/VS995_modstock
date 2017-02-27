@@ -342,6 +342,12 @@ struct msm_fb_data_type {
 #endif
 #if defined(CONFIG_LGE_DISPLAY_COMMON)
 	bool recovery;
+#if defined(CONFIG_LGE_PANEL_RECOVERY)
+	u32 recovery_bl_level;
+#if IS_ENABLED(CONFIG_LGE_DISPLAY_BL_EXTENDED)
+	u32 recovery_bl_level_ex;
+#endif
+#endif
 #endif
 	struct platform_device *pdev;
 

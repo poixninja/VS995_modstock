@@ -161,7 +161,7 @@ static int venus_setup_cb(struct device *dev,
 		return -ENODEV;
 	}
 	dprintk(VIDC_DBG,
-		"%s Attached device %p and created mapping %p for %s\n",
+		"%s Attached device %pK and created mapping %pK for %s\n",
 		__func__, dev, venus_data->mapping, dev_name(dev));
 	return 0;
 }

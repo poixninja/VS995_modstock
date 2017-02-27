@@ -1,6 +1,6 @@
 #!/bin/bash
 
-DEFCONFIG_FILE=VS995_modStock_defconfig
+DEFCONFIG_FILE=elsa_vzw-perf_defconfig
 
 if [ -z "$DEFCONFIG_FILE" ]; then
 	echo "Need defconfig file(xxx_defconfig)!"

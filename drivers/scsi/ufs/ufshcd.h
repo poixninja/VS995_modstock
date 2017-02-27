@@ -706,6 +706,7 @@ struct ufs_stats {
  * @is_urgent_bkops_lvl_checked: keeps track if the urgent bkops level for
  *  device is known or not.
  * @scsi_block_reqs_cnt: reference counting for scsi block requests
+ * @do_full_init: recovery from Line-Reset on Hibern8
  */
 struct ufs_hba {
 	void __iomem *mmio_base;
@@ -911,6 +912,8 @@ struct ufs_hba {
 	bool no_ref_clk_gating;
 
 	int scsi_block_reqs_cnt;
+
+	bool do_full_init;
 
 #ifdef CONFIG_UFS_LGE_CARD_RESET
 	void*	card_reset_info;

@@ -684,19 +684,26 @@ static int32_t msm_actuator_move_focus(
 
 #ifdef CONFIG_LG_OIS
 extern void lc898122a_af_vcm_code(int16_t UsVcmCod);
-extern void lgit_imx234_rohm_write_vcm(int16_t nDAC);
-extern void lgit_imx298_rohm_write_vcm(int16_t nDAC);
-
-
-#define EEPROM_SLAVE_ID (0x54) //(0xA8 >> 1)
 #define EEPROM_ADDR_VCM_VERSION (0x92E)
+#define EEPROM_SLAVE_ID (0x54) //(0xA8 >> 1)
+#if defined(CONFIG_IMX234)
+extern void lgit_imx234_rohm_write_vcm(int16_t nDAC);
+#endif
+#if defined(CONFIG_MACH_MSM8996_ELSA) && !defined(CONFIG_IMX234)
+extern void lgit_imx298_rohm_write_vcm(int16_t nDAC);
+extern void lgit_s5k2p7_rohm_write_vcm(int16_t nDAC);
+extern uint16_t map_ver;
+#define EEPROM_ADDR_S5K2P7_VCM_VERSION (0x88E)
+#define EEPROM_ADDR_MAP_VERSION (0x770)
+#endif
 
 static int32_t msm_actuator_get_vcm_version(struct msm_actuator_ctrl_t *a_ctrl, uint16_t* vcm_ver)
 {
 	int32_t rc = 0;
 	struct msm_camera_cci_client *cci_client = NULL;
-
-
+#if defined(CONFIG_MACH_MSM8996_ELSA) && !defined(CONFIG_IMX234)
+	uint16_t e2p_map_ver = -1;
+#endif
 	cci_client = a_ctrl->i2c_eeprom_client.cci_client;
 	cci_client->sid = EEPROM_SLAVE_ID; //0xA0 >> 1;
 	cci_client->retries = 3;
@@ -706,11 +713,38 @@ static int32_t msm_actuator_get_vcm_version(struct msm_actuator_ctrl_t *a_ctrl, 
 
 	if( a_ctrl->i2c_eeprom_client.i2c_func_tbl->i2c_read)
 	{
+#if defined(CONFIG_MACH_MSM8996_ELSA) && !defined(CONFIG_IMX234)
+		rc = a_ctrl->i2c_eeprom_client.i2c_func_tbl->i2c_read(
+				&a_ctrl->i2c_eeprom_client,
+				EEPROM_ADDR_MAP_VERSION,
+				&e2p_map_ver,
+				MSM_CAMERA_I2C_BYTE_DATA);
+		if (rc < 0) {
+			pr_err("%s: read map version failed! (rc: %d)\n", __func__, rc);
+			return rc;
+		}
+		pr_err("%s: [CHECK] map_ver(%d) rc(%d)\n", __func__, e2p_map_ver, rc);
+
+	    if(e2p_map_ver == 0x03){ // ELSA S5K2P7 sensor module
+			rc = a_ctrl->i2c_eeprom_client.i2c_func_tbl->i2c_read(
+							&a_ctrl->i2c_eeprom_client,
+							EEPROM_ADDR_S5K2P7_VCM_VERSION,
+							vcm_ver,
+							MSM_CAMERA_I2C_WORD_DATA);
+		}else{ // ELSA IMX298 sensor module
+			rc = a_ctrl->i2c_eeprom_client.i2c_func_tbl->i2c_read(
+							&a_ctrl->i2c_eeprom_client,
+							EEPROM_ADDR_VCM_VERSION,
+							vcm_ver,
+							MSM_CAMERA_I2C_WORD_DATA);
+			}
+#else
 		rc = a_ctrl->i2c_eeprom_client.i2c_func_tbl->i2c_read(
 				&a_ctrl->i2c_eeprom_client,
 				EEPROM_ADDR_VCM_VERSION,
 				vcm_ver,
 				MSM_CAMERA_I2C_WORD_DATA);
+#endif
 	}
 	if (rc < 0) {
 		pr_err("%s: read vcm version failed! (rc: %d)\n", __func__, rc);
@@ -963,8 +997,12 @@ static int32_t msm_actuator_claf_move_focus(
 	lgit_imx234_rohm_write_vcm(tar_pos);
 #endif
 #if defined(CONFIG_MACH_MSM8996_ELSA) && !defined(CONFIG_IMX234)
-    lgit_imx298_rohm_write_vcm(tar_pos);
-#endif
+	if(map_ver == 0x03){
+        lgit_s5k2p7_rohm_write_vcm(tar_pos);
+	}else{
+	lgit_imx298_rohm_write_vcm(tar_pos);
+	}
+	#endif
 
 	if (rc < 0) {
 		pr_err("i2c write error:%d\n", rc);
@@ -1587,8 +1625,12 @@ static int32_t msm_actuator_claf_set_position(
 #ifdef CONFIG_IMX234
 	lgit_imx234_rohm_write_vcm(tar_pos);
 #endif
-#ifdef CONFIG_MACH_MSM8996_ELSA
-    lgit_imx298_rohm_write_vcm(tar_pos);
+#if defined(CONFIG_MACH_MSM8996_ELSA) && !defined(CONFIG_IMX234)
+	if(map_ver == 0x03){
+		lgit_s5k2p7_rohm_write_vcm(tar_pos);
+		}else{
+		lgit_imx298_rohm_write_vcm(tar_pos);
+		}
 #endif
 	}
 	CDBG("%s exit %d\n", __func__, __LINE__);

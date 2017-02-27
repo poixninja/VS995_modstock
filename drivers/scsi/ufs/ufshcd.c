@@ -4049,7 +4049,8 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
 	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "enter",
 			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
 
-	if (ret) {
+	if (ret || hba->do_full_init) {
+		hba->do_full_init = false;
 		ufshcd_update_error_stats(hba, UFS_ERR_HIBERN8_ENTER);
 		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d",
 			__func__, ret);
@@ -4090,7 +4091,8 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
 	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "exit",
 			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
 
-	if (ret) {
+	if (ret || hba->do_full_init) {
+		hba->do_full_init = false;
 		ufshcd_update_error_stats(hba, UFS_ERR_HIBERN8_EXIT);
 		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d",
 			__func__, ret);
@@ -5753,7 +5755,7 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
 	reg = ufshcd_readl(hba, REG_UIC_ERROR_CODE_PHY_ADAPTER_LAYER);
 	/* Ignore LINERESET indication, as this is not an error */
 	if ((reg & UIC_PHY_ADAPTER_LAYER_ERROR) &&
-			(reg & UIC_PHY_ADAPTER_LAYER_LANE_ERR_MASK)) {
+			(reg & UIC_PHY_ADAPTER_LAYER_ERROR_CODE_MASK)) {
 		/*
 		 * To know whether this error is fatal or not, DB timeout
 		 * must be checked but this error is handled separately.
@@ -5761,6 +5763,16 @@ static void ufshcd_update_uic_error(struct ufs_hba *hba)
 		dev_dbg(hba->dev, "%s: UIC Lane error reported, reg 0x%x\n",
 				__func__, reg);
 		ufshcd_update_uic_reg_hist(&hba->ufs_stats.pa_err, reg);
+
+		if (reg & 0x10) {
+			if (hba->active_uic_cmd &&
+			((hba->active_uic_cmd->command == UIC_CMD_DME_HIBER_ENTER)
+			 || (hba->active_uic_cmd->command == UIC_CMD_DME_HIBER_EXIT))) {
+				dev_err(hba->dev, "%s: UIC Line-reset reported during hibern8 operation, reg 0x%x\n",
+				__func__, reg);
+				hba->do_full_init = true;
+			}
+		}
 	}
 
 	/* PA_INIT_ERROR is fatal and needs UIC reset */

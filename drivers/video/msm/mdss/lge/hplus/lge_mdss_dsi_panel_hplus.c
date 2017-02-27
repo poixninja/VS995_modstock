@@ -21,6 +21,9 @@
 #if IS_ENABLED(CONFIG_LGE_DISPLAY_READER_MODE)
 #include "../lge_reader_mode.h"
 #endif
+#if defined(CONFIG_LGE_DISPLAY_BL_EXTENDED)
+extern int lge_set_validate_lcd_reg(void);
+#endif
 
 #if IS_ENABLED(CONFIG_LGE_DISPLAY_OVERRIDE_MDSS_DSI_PANEL_RESET)
 static int mdss_dsi_request_gpios(struct mdss_dsi_ctrl_pdata *ctrl_pdata)
@@ -134,6 +137,21 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 				if (pdata->panel_info.rst_seq[++i])
 					usleep_range(pinfo->rst_seq[i] * 1000,
 						pinfo->rst_seq[i] * 1000);
+			}
+
+			if (pinfo->power_ctrl || pinfo->panel_dead) {
+				usleep_range(5000,5000);
+
+				rc = msm_dss_enable_vreg(
+						ctrl_pdata->panel_power_data.vreg_config,
+						ctrl_pdata->panel_power_data.num_vreg, 1);
+				if (rc) {
+					pr_err("%s: failed to enable vregs for %s\n",
+							__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+				} else {
+					pr_info("%s: enable vregs for %s\n",
+							__func__, __mdss_dsi_pm_name(DSI_PANEL_PM));
+				}
 			}
 
 			if (gpio_is_valid(ctrl_pdata->bklt_en_gpio)) {
@@ -308,6 +326,9 @@ int mdss_dsi_panel_on(struct mdss_panel_data *pdata)
 #if defined(CONFIG_LGE_ENHANCE_GALLERY_SHARPNESS)
 	if (ctrl->sharpness_on_cmds.cmds[2].payload[3] == 0x29)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->sharpness_on_cmds, CMD_REQ_COMMIT);
+#endif
+#if defined(CONFIG_LGE_DISPLAY_BL_EXTENDED)
+	lge_set_validate_lcd_reg();
 #endif
 	if (ctrl->display_on_cmds.cmd_cnt)
 		mdss_dsi_panel_cmds_send(ctrl, &ctrl->display_on_cmds, CMD_REQ_COMMIT);

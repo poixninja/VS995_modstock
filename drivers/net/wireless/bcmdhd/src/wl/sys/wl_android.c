@@ -1770,6 +1770,13 @@ wls_parse_batching_cmd(struct net_device *dev, char *command, int total_len)
 						DHD_PNO(("band : %s\n",
 							(*token2 == 'A')? "A" : "B"));
 					} else {
+						if ((batch_params.nchan >= WL_NUMCHANNELS) ||
+						    (i >= WL_NUMCHANNELS)) {
+						    DHD_ERROR(("Too many nchan %d\n",
+						           batch_params.nchan));
+						    err = BCME_BUFTOOSHORT;
+						    goto exit;
+						}
 						batch_params.chan_list[i++] =
 						simple_strtol(token2, NULL, 0);
 						batch_params.nchan++;
@@ -2996,15 +3003,15 @@ wl_android_set_sarlimit_txctrl(struct net_device *dev, const char* string_num)
 	/* As Samsung specific and their requirement, '0' means activate sarlimit
 	 * and '-1' means back to normal state (deactivate sarlimit)
 	 */
-	if (mode == 0) {
-		DHD_INFO(("%s: SAR limit control activated\n", __FUNCTION__));
-		setval = 1;
-	} else if (mode == -1) {
-		DHD_INFO(("%s: SAR limit control deactivated\n", __FUNCTION__));
-		setval = 0;
-	} else {
-		return -EINVAL;
-	}
+        if (mode >= 0 && mode < 3) {
+                DHD_INFO(("%s: SAR limit control activated mode = %d\n", __FUNCTION__, mode));
+                setval = mode + 1;
+        } else if (mode == -1) {
+                DHD_INFO(("%s: SAR limit control deactivated\n", __FUNCTION__));
+                setval = 0;
+        } else {
+                return -EINVAL;
+        }
 
 	err = wldev_iovar_setint(dev, "sar_enable", setval);
 	if (unlikely(err)) {

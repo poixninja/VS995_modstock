@@ -1,8 +1,8 @@
-export LOCALVERSION="-vs995.10b.modStock-1.1"
+export LOCALVERSION="-vs995.10j.modStock-0.1beta"
 export KBUILD_BUILD_USER=poixninja
 export KBUILD_BUILD_HOST=nowhere
 export ARCH=arm64
-export CROSS_COMPILE=./aarch64-linux-android-4.9/prebuilt/linux-x86_64/bin/aarch64-linux-android-
+export CROSS_COMPILE=/home/nick/VS995-10j/aarch64-linux-android-4.9/prebuilt/linux-x86_64/bin/aarch64-linux-android-
 DIR=$(pwd)
 BUILD="$DIR/build"
 OUT="$DIR/out"
@@ -18,7 +18,7 @@ fi
 
 echo "setting up build..."
 mkdir "$BUILD"
-make O="$BUILD" VS995_reStock_defconfig
+make O="$BUILD" elsa_vzw-perf_defconfig
 
 echo "building kernel..."
 make O="$BUILD" -j$NPR

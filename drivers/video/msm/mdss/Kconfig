@@ -165,7 +165,7 @@ config LGE_LCD_POWER_CTRL
 	if you say yes here you get support for lcd power on/off control.
 
 config LGE_PANEL_RECOVERY
-	depends on  LGE_MIPI_H1_INCELL_QHD_CMD_PANEL
+	depends on  LGE_DISPLAY_COMMON
 	bool "Panel recovery support"
 	default y
 	---help---

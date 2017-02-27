@@ -49,6 +49,7 @@
 
 #define E2P_FIRST_ADDR			(0x0900)
 #define E2P_DATA_BYTE_FIRST		(44)
+#define E2P_MAP_VER_ADDR        (0x0770)
 
 #define CTL_END_ADDR_FOR_FIRST_E2P_DL	(0x1DC0)
 #define CTL_END_ADDR_FOR_SECOND_E2P_DL	(0x1DDA)
@@ -71,7 +72,9 @@
 static int16_t g_gyro_offset_value_x, g_gyro_offset_value_y;
 static uint16_t cal_ver = 0;
 static bool vcm_check = 0;
-
+#if defined(CONFIG_MACH_MSM8996_ELSA) && !defined(CONFIG_IMX234)
+extern uint16_t map_ver;
+#endif
 
 /*If changed FW, change below FW bin and Checksum information*/
 static struct ois_i2c_bin_list T0_MTM_ACTUATOR_LGIT_VER16_REL_BIN_DATA = {
@@ -616,8 +619,12 @@ int32_t lgit_imx298_init_set_rohm_ois(struct msm_ois_ctrl_t *o_ctrl,
 	}
 
 	ois_i2c_e2p_read(E2P_FIRST_ADDR + 0x2E, &cal_ver, 2);
+#if defined(CONFIG_MACH_MSM8996_ELSA) && !defined(CONFIG_IMX234)
+	ois_i2c_e2p_read(E2P_MAP_VER_ADDR, &map_ver, 1);
+	CDBG("%s cal_ver %x, map_ver %x, init ver %d\n", __func__, cal_ver, map_ver, ver);
+#else
 	CDBG("%s ver %x, init ver %d\n", __func__, cal_ver, ver);
-
+#endif
 	switch (cal_ver) {
 	case 0x01:
 		pr_err("[CHECK] %s: Apply T0_MTM_ACTUATOR_LGIT_VER16_REL_BIN_DATA\n", __func__);

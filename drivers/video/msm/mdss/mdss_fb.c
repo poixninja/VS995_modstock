@@ -2287,6 +2287,21 @@ static int mdss_fb_blank_unblank(struct msm_fb_data_type *mfd)
 		}
 
 		mfd->panel_power_state = MDSS_PANEL_POWER_ON;
+#if defined(CONFIG_LGE_PANEL_RECOVERY)
+		if (mfd->panel_info->panel_dead == true) {
+			mutex_lock(&mfd->bl_lock);
+			mfd->allow_bl_update = true;
+			mdss_fb_set_backlight(mfd, mfd->recovery_bl_level);
+			mutex_unlock(&mfd->bl_lock);
+
+#if IS_ENABLED(CONFIG_LGE_DISPLAY_BL_EXTENDED)
+			mutex_lock(&mfd->bl_lock);
+			mfd->allow_bl_update_ex = true;
+			mdss_fb_set_backlight_ex(mfd, mfd->recovery_bl_level_ex);
+			mutex_unlock(&mfd->bl_lock);
+#endif
+		}
+#endif
 		mfd->panel_info->panel_dead = false;
 		mutex_lock(&mfd->update.lock);
 		mfd->update.type = NOTIFY_TYPE_UPDATE;
@@ -5483,12 +5498,14 @@ void mdss_fb_report_panel_dead(struct msm_fb_data_type *mfd)
 		return;
 	} else {
 		mfd->recovery = true;
-		mfd->unset_bl_level= mfd->bl_level;
+#if defined(CONFIG_LGE_PANEL_RECOVERY)
+		mfd->recovery_bl_level= mfd->bl_level;
+		pr_info("[Display] Recovery start. last bl level : %d\n", mfd->recovery_bl_level);
 #if IS_ENABLED(CONFIG_LGE_DISPLAY_BL_EXTENDED)
-		mfd->unset_bl_level_ex = mfd->bl_level_ex;
-		pr_info("[Display] Recovery start. last bl level ex : %d\n", mfd->unset_bl_level_ex);
+		mfd->recovery_bl_level_ex = mfd->bl_level_ex;
+		pr_info("[Display] Recovery start. last bl level ex : %d\n", mfd->recovery_bl_level_ex);
 #endif
-		pr_info("[Display] Recovery start. last bl level : %d\n", mfd->unset_bl_level);
+#endif
 	}
 #endif
 	pdata->panel_info.panel_dead = true;

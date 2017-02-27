@@ -302,7 +302,7 @@ static int lgcc_set_hvdcp_thermal_chg_current(const char *val,
 		return 0;
 	}
 
-	if (lgcc_hvdcp_thermal_mitigation > 0 && lgcc_hvdcp_thermal_mitigation < 2000) {
+	if (lgcc_hvdcp_thermal_mitigation > 0 && lgcc_hvdcp_thermal_mitigation < CHG_CURRENT_MAX) {
 		the_cc->chg_current_te = lgcc_hvdcp_thermal_mitigation;
 		lgcc_vote_fcc(LGCC_REASON_THERMAL_HVDCP, lgcc_hvdcp_thermal_mitigation);
 	} else {
